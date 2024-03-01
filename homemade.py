@@ -5,6 +5,7 @@ With these classes, bot makers will not have to implement the UCI or XBoard inte
 """
 
 from __future__ import annotations
+import time
 import chess
 from chess.engine import PlayResult, Limit
 import random
@@ -12,6 +13,8 @@ from lib.engine_wrapper import MinimalEngine, MOVE
 from typing import Any
 import logging
 
+from src.search import search as custom_search
+from src.evaluation import evaluate
 
 # Use this logger variable to print messages to the console or log files.
 # logger.info("message") will always print "message" to the console or log file.
@@ -73,6 +76,8 @@ class ComboEngine(ExampleEngine):
         :param root_moves: If it is a list, the engine should only play a move that is in `root_moves`.
         :return: The move to play.
         """
+        print(f"time_limit = {time_limit}")
+
         if isinstance(time_limit.time, int):
             my_time = time_limit.time
             my_inc = 0
@@ -85,6 +90,9 @@ class ComboEngine(ExampleEngine):
 
         possible_moves = root_moves if isinstance(root_moves, list) else list(board.legal_moves)
 
+        print(f"my_time = {my_time}")
+        print(f"my_inc = {my_inc}")
+
         if my_time / 60 + my_inc > 10:
             # Choose a random move.
             move = random.choice(possible_moves)
@@ -92,4 +100,23 @@ class ComboEngine(ExampleEngine):
             # Choose the first move alphabetically in uci representation.
             possible_moves.sort(key=str)
             move = possible_moves[0]
+
+        # time.sleep(15)
+        
         return PlayResult(move, None, draw_offered=draw_offered)
+
+
+class StockGus(ExampleEngine):
+    """"""
+
+    def search(self, board: chess.Board, *args: Any) -> PlayResult:
+        """"""
+        search_results = custom_search(board, depth = 5)
+        print(search_results)
+        best_move = search_results[1][0]
+        print(best_move)
+
+        best_move = chess.Move.from_uci(best_move)
+
+        best_move = random.choice(list(board.legal_moves))
+        return PlayResult(best_move, None)
